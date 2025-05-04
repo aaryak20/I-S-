@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Thank you.</title>
+  <style>
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      height: 100vh;
+      margin: 0;
+      font-family: 'Brush Script MT', cursive;
+      background-color: black;
+      color: #050505;
+      position: relative;
+    }
+
+    h1 {
+      font-size: 40px;
+      font-weight: bold;
+      color: rgb(255, 255, 255);
+      margin-top: 20px;
+    }
+
+    /* Style for the graph container (box) */
+    .graph-container {
+      width: 90%;
+      height: 60vh;
+      border: 2px solid #000;
+      box-sizing: border-box;
+      position: relative;
+      margin-top: 40px;
+    }
+
+    canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    /* Hidden audio element to play the heartbeat sound */
+    audio {
+      display: none;
+    }
+
+    /* Style for the bottom text and clickable button */
+    .bottom-text {
+      position: absolute;
+      bottom: 20px;
+      font-size: 24px;
+      font-family: 'Courier New', Courier, monospace;
+      color: white;
+      text-align: center;
+      width: 100%;
+    }
+
+    .bottom-text a {
+      text-decoration: none;
+      color: white;
+      background-color: rgba(255, 253, 253, 0.405);
+      border: white;
+      padding: 10px 20px;
+      border-radius: 5px;
+      font-size: 24px;
+      transition: background-color 0.3s ease;
+    }
+
+    .bottom-text a:hover {
+      background-color: rgba(255, 255, 255, 0.3);
+    }
+  </style>
+</head>
+<body>
+  <h1>Connecting souls through sound.</h1>
+  
+  <!-- Box container for the ECG graph -->
+  <div class="graph-container">
+    <canvas id="canvas"></canvas>
+  </div>
+
+  <!-- Audio element for heartbeat sound -->
+  <audio id="heartbeatSound" loop>
+    <source src="/Users/aaryakamat/Desktop/I&S code project/heartbeat-sound-effects-for-you-122458.mp3" type="audio/mp3">
+    Your browser does not support the audio element.
+  </audio>
+
+  <!-- Bottom clickable text -->
+  <div class="bottom-text">
+    <a href="index.html">Thank you.</a>
+  </div>
+
+  <script>
+    const canvas = document.getElementById("canvas");
+    const ctx = canvas.getContext("2d");
+
+    // Retrieve the saved graph data from localStorage
+    let graphData = JSON.parse(localStorage.getItem('graphData')) || [];
+
+    // Initial canvas size
+    canvas.width = window.innerWidth * 0.9;
+    canvas.height = window.innerHeight * 0.6;
+
+    let lastX = 0;
+
+    // Function to animate and draw the graph continuously
+    function animateGraph() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear the canvas
+      ctx.beginPath();
+      ctx.moveTo(lastX, canvas.height / 2); // Start at the last X position
+
+      // Loop through the graphData and draw it on the canvas
+      graphData.forEach((value, index) => {
+        const x = lastX + index;
+        const y = canvas.height / 2 + Math.sin(x / 20) * value * 0.5;
+        ctx.lineTo(x, y);
+      });
+
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = '#ff0000';
+      ctx.stroke();
+
+      // Update the lastX for the continuous motion effect
+      lastX += 2; // Increase this value to make the graph move faster
+
+      // Continuously add more data to create an infinite scrolling effect
+      if (lastX >= canvas.width) {
+        lastX = 0; // Reset to start the loop again once we reach the edge of the canvas
+      }
+
+      // Request the next frame for animation
+      requestAnimationFrame(animateGraph);
+    }
+
+    // Start the animation
+    animateGraph();
+
+    // Play the heartbeat sound once the page has loaded
+    window.onload = function() {
+      const heartbeatSound = document.getElementById("heartbeatSound");
+      heartbeatSound.play('/Users/aaryakamat/Desktop/I&S code project/heartbeat-sound-effects-for-you-122458.mp3').catch((error) => {
+        console.log("Audio playback failed:", error);
+      });
+    };
+  </script>
+</body>
+</html>

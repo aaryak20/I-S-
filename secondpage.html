@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>For you, a thousand times over</title>
+  <style>
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      height: 100vh;
+      margin: 0;
+      font-family: 'Courier New', Courier, monospace;
+      background-image: url('/Users/aaryakamat/Desktop/I&S code project/images.png');
+      color: #050505;
+      position: relative;
+      text-align: center; /* Align text center */
+    }
+
+    /* Style for all text elements to have the same font size and bold weight */
+    h1, p {
+      font-size: 20px; /* Set a uniform font size */
+      font-weight: bold; /* Make the text bold */
+      margin: 5px 0; /* Add space between each text element */
+    }
+
+    h1 {
+      color: black;
+      font-weight: bold;
+      margin-top: 20px; /* Adjust positioning of the title */
+    }
+
+    /* Style for the graph container (box) */
+    .graph-container {
+      width: 90%;
+      height: 60vh;
+      border: 2px solid #fff;
+      box-sizing: border-box;
+      position: relative;
+      margin-top: 30px;
+    }
+
+    canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    .buttons {
+      position: absolute;
+      bottom: 20px;
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      width: 100%;
+    }
+
+    button {
+      padding: 12px 25px;
+      font-size: 18px;
+      cursor: pointer;
+      background-color: none;
+      color: none;
+      border: white;
+      border-radius: 5px;
+      transition: background-color 0.3s;
+    }
+
+    button:hover {
+      background-color: none;
+      border: white;
+      border-radius: 5px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Instructions</h1>
+  <p>1. Say the phrase "For you, a thousand times over." in your language multiple times.</p>
+  <p>2. Stop and save the data and go to the next page.</p>
+  
+  <!-- Box container for the ECG graph -->
+  <div class="graph-container">
+    <canvas id="canvas"></canvas>
+  </div>
+
+  <div class="buttons">
+    <button id="startButton">Start Listening</button>
+    <button id="stopButton">Stop</button>
+    <button id="regenButton">Regenerate</button>
+    <button id="saveButton">Save Data</button>
+    <button id="nextPageButton">Go to Next Page</button> <!-- New Button -->
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/addons/p5.sound.min.js"></script>
+
+  <script>
+    const canvas = document.getElementById("canvas");
+    const ctx = canvas.getContext("2d");
+    const startButton = document.getElementById("startButton");
+    const stopButton = document.getElementById("stopButton");
+    const regenButton = document.getElementById("regenButton");
+    const saveButton = document.getElementById("saveButton");
+    const nextPageButton = document.getElementById("nextPageButton");
+
+    // Variables for Web Audio API
+    let audioContext;
+    let analyser;
+    let microphone;
+    let scriptProcessor;
+    let bufferLength;
+    let dataArray;
+
+    // Variables for drawing the ECG graph
+    let lastX = 0;
+    let lastY = canvas.height / 2;
+    let isListening = false;
+
+    // ECG parameters
+    let currentAmplitude = 0;
+    let graphData = [];
+
+    // Initial canvas size
+    canvas.width = window.innerWidth * 0.9;
+    canvas.height = window.innerHeight * 0.6;
+
+    // Function to start the audio and visualization
+    function startListening() {
+      audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      analyser = audioContext.createAnalyser();
+      analyser.fftSize = 256;
+      bufferLength = analyser.frequencyBinCount;
+      dataArray = new Uint8Array(bufferLength);
+
+      navigator.mediaDevices.getUserMedia({ audio: true })
+        .then((stream) => {
+          microphone = audioContext.createMediaStreamSource(stream);
+          microphone.connect(analyser);
+
+          scriptProcessor = audioContext.createScriptProcessor(2048, 1, 1);
+          scriptProcessor.onaudioprocess = processAudio;
+          analyser.connect(scriptProcessor);
+          scriptProcessor.connect(audioContext.destination);
+
+          startButton.innerText = "Listening...";
+
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          drawFlatLine();
+
+          isListening = true;
+        })
+        .catch((error) => {
+          alert("Error accessing the microphone: " + error);
+        });
+    }
+
+    function stopListening() {
+      isListening = false;
+      if (audioContext) {
+        audioContext.close();
+      }
+      startButton.innerText = "Start Listening";
+    }
+
+    function regenerateGraph() {
+      graphData = [];
+      lastX = 0;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      drawFlatLine();
+    }
+
+    function processAudio() {
+      analyser.getByteFrequencyData(dataArray);
+
+      let sum = 0;
+      for (let i = 0; i < bufferLength; i++) {
+        sum += dataArray[i];
+      }
+      currentAmplitude = sum / bufferLength;
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      let sensitivity = 5;
+      let scaledAmplitude = currentAmplitude * sensitivity;
+
+      if (isListening) {
+        graphData.push(scaledAmplitude);
+
+        if (graphData.length > canvas.width) {
+          graphData.shift();
+        }
+
+        ctx.beginPath();
+        ctx.moveTo(lastX, canvas.height / 2);
+
+        graphData.forEach((value, index) => {
+          const x = lastX + index;
+          const y = canvas.height / 2 + Math.sin(x / 20) * value * 0.5;
+          ctx.lineTo(x, y);
+        });
+
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = '#ff0000';
+        ctx.stroke();
+      }
+    }
+
+    function drawFlatLine() {
+      ctx.beginPath();
+      ctx.moveTo(0, canvas.height / 2);
+      ctx.lineTo(canvas.width, canvas.height / 2);
+      ctx.strokeStyle = '#000';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    }
+
+    function saveData() {
+      localStorage.setItem('graphData', JSON.stringify(graphData)); 
+      alert('Graph data saved!');
+    }
+
+    // Go to next page (Page 3)
+    function goToNextPage() {
+      window.location.href = 'thirdpage.html';  // Ensure this is the correct link for Page 3
+    }
+
+    startButton.addEventListener("click", startListening);
+    stopButton.addEventListener("click", stopListening);
+    regenButton.addEventListener("click", regenerateGraph);
+    saveButton.addEventListener("click", saveData);
+    nextPageButton.addEventListener("click", goToNextPage); // Link to Page 3
+  </script>
+</body>
+</html>

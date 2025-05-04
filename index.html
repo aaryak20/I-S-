@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Intro Page</title>
+  <link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet"> <!-- Include Pacifico font -->
+  <style>
+    /* Make the background black */
+    body {
+      background-color: black;
+      margin: 0;
+      height: 100vh;
+      overflow: hidden;
+      font-family: 'Courier New', Courier, monospace;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      color: white;
+      position: relative;
+      cursor: pointer; /* Change cursor to a pointer to indicate it's clickable */
+      flex-direction: column;
+      text-align: center; /* Center align the title and subtitle */
+    }
+
+    /* Style for the quote appearing multiple times */
+    .quote {
+      position: absolute;
+      color: white;
+      font-size: 10px; /* Small font for the repeated quote */
+      opacity: 0;
+      animation: fadeIn 3s forwards;
+      transition: opacity 1s ease; /* Smooth transition for opacity */
+    }
+
+    /* Keyframes for fading in the quote */
+    @keyframes fadeIn {
+      10% {
+        opacity: 0.4;
+      }
+      100% {
+        opacity: 0.;
+      }
+    }
+
+    /* Title styles */
+    h1 {
+      font-size: 50px; /* Big font size */
+      color: white;
+      font-family: 'Courier New', Courier, monospace; /* Cursive font */
+      position: relative;
+      z-index: 1;
+      opacity: 0;
+      transition: opacity 2s ease; /* Smooth transition for fade-in effect */
+    }
+
+    /* By Aarya Kamat text styles */
+    .subtitle {
+      font-size: 23px; /* Smaller font size for the subtitle */
+      color: white;
+      opacity: 0;
+      margin-top: 20px;
+      font-family: 'Courier New', Courier, monospace;
+      transition: opacity 2s; /* Fade-in effect */
+    }
+
+    /* Blinking text cursor (vertical line) */
+    .cursor {
+      display: inline-block;
+      width: 2px;  /* Reduced width to make the cursor thinner */
+      height: 30px;
+      background-color: white;
+      margin-left: 5px;
+      animation: blink 0.8s step-end infinite;
+    }
+
+    /* Keyframes for blinking cursor */
+    @keyframes blink {
+      50% {
+        opacity: 0;
+      }
+    }
+
+  </style>
+</head>
+<body>
+  <!-- Title that will appear letter by letter -->
+  <h1 id="title"></h1>
+  <!-- Subtitle that will appear after the title -->
+  <div class="subtitle" id="subtitle">By Aarya Kamat</div>
+
+  <script>
+    // Function to generate the quote 1000 times
+    function generateQuotes() {
+      const body = document.body;
+      const quote = "For you a thousand times over";
+
+      for (let i = 0; i < 1000; i++) {
+        const quoteElement = document.createElement('div');
+        quoteElement.classList.add('quote');
+        quoteElement.textContent = quote;
+
+        // Randomize position for each quote
+        quoteElement.style.top = Math.random() * 100 + 'vh'; // Random vertical position
+        quoteElement.style.left = Math.random() * 100 + 'vw'; // Random horizontal position
+        quoteElement.style.animationDelay = Math.random() * 3 + 's'; // Delay for animation
+
+        body.appendChild(quoteElement);
+      }
+    }
+
+    // Call the function to generate quotes
+    generateQuotes();
+
+    // Function to create the typing effect for the title
+    function typeTitle() {
+      const title = document.getElementById('title');
+      const text = "For you, a thousand times over.";
+      let index = 0;
+
+      // Function to type one letter at a time
+      function typeLetter() {
+        if (index < text.length) {
+          title.textContent += text.charAt(index);
+          index++;
+          setTimeout(typeLetter, 100); // Adjust the delay for typing speed
+        } else {
+          // Add the cursor after typing is finished
+          const cursor = document.createElement('span');
+          cursor.classList.add('cursor');
+          title.appendChild(cursor); // Add cursor to the end of the title
+          
+          // After the title typing is done, fade in the subtitle text
+          const subtitle = document.getElementById('subtitle');
+          subtitle.style.opacity = 1; // Fade in the subtitle
+        }
+      }
+
+      typeLetter();
+    }
+
+    // Start the process
+    setTimeout(() => {
+      // Lower the opacity of all the quotes when the title starts appearing
+      const quotes = document.querySelectorAll('.quote');
+      quotes.forEach(quote => {
+        quote.style.opacity = 0.3; // Reduce opacity of background quotes to create the effect
+      });
+
+      // Start showing the main title (fade it in) while quotes are fading out
+      const title = document.getElementById('title');
+      title.style.transition = 'opacity 2s ease'; // Smooth transition for title fade-in
+      title.style.opacity = 1; // Fade in the title
+      
+      // Start typing the title immediately after the title fades in
+      typeTitle(); 
+
+      // Fade in the subtitle after the title finishes typing
+    }, 3000); // Start everything after 3 seconds (quotes start fading)
+
+    // Event listener for clicks anywhere on the page to redirect to another page
+    document.body.addEventListener('click', () => {
+      // Redirect to the second page (replace with your actual URL)
+      window.location.href = 'secondpage.html'; // Replace 'secondpage.html' with your desired page
+    });
+  </script>
+</body>
+</html>
